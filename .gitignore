@@ -9,3 +9,8 @@ dist/
 data/
 .pytest_cache/
 .DS_Store
+
+# Local Claude Code config & plugins — never pushed to GitHub
+.claude/
+.claude-plugins/
+*.local.json
