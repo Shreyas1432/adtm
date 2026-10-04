@@ -18,21 +18,23 @@ Tracks to the five investment gates (Gate 1 architecture+benchmark … Gate 5 de
 
 ## Phase 1 — MVP (one object end-to-end)
 Build order deliberately: **load/read-back/reconcile before simulation**.
-- [ ] EBS source adapter: connect (read-only), list tables, column metadata (type/len/PK/desc)
-- [ ] Schema discovery UI + encryption-choice selection
-- [ ] Extraction: SQL editor (AI-assisted), execute, immutable Bronze version, inspect
-- [ ] DQ engine: null/datatype/length/duplicate/RI/date/business rules + results UI
-- [ ]   → package DQ + profiling as the standalone **readiness diagnostic**
-- [ ] Mapping: 1:1 / 1:many / static / XREF / lookup; human approval + versioning
-- [ ] Fusion **load** adapter: validate → submit → poll → errors → partial-failure replay (idempotent)
-- [ ] Fusion **read-back** adapter: re-read actual state; coverage report
-- [ ] Reconciliation: counts, loaded/failed/unmatched, control/financial totals, evidence artifact
-- [ ] Simulation: predict load failures (built after real errors are known)
-- [ ] MVP AI: table/SQL/mapping/DQ suggestions + error explanation (approval-gated)
-- [ ] AI instrumentation: acceptance/correction rate, T_AI vs T_manual
-- [ ] Hash-chained audit over the full run + chain verification
-- [ ] E2E test: one object extract→…→reconcile (Playwright)
-- [ ] Benchmark: extraction/transform/read-back/concurrency envelope
+Engine logic is built + unit/E2E tested offline; items marked *(pilot)* need the
+real EBS/Fusion integration and the UI screens at the pilot.
+- [x] EBS source adapter: connect (read-only), list tables, column metadata (type/len/PK/desc)
+- [x] Schema discovery (API + encryption-choice suggestion); *(pilot: UI)*
+- [x] Extraction → encrypted immutable Bronze (`dataplane/extract.py`); *(pilot: SQL editor UI)*
+- [x] DQ engine: null/datatype/length/duplicate/RI/date/business (`dataplane/dq.py`); *(pilot: results UI)*
+- [x]   → DQ + profiling packaged as the readiness diagnostic (engine)
+- [x] Mapping: 1:1 / static / XREF / lookup + versioned/approved config (`dataplane/transform.py`); 1:many deferred
+- [x] Fusion **load**: validate → submit → poll → errors → partial-failure replay, idempotent (`adapters/fusion_local.py`); *(pilot: real FBDI/ESS adapter)*
+- [x] Fusion **read-back**: re-read actual state + coverage (`adapters/fusion_local.py`); *(pilot: real BICC/REST adapter)*
+- [x] Reconciliation: counts, loaded/failed/unmatched, control totals, status (`dataplane/reconcile.py`)
+- [x] Simulation: predict load failures via the DQ engine (`workers/handlers/simulate.py`)
+- [x] MVP AI: metadata-only mapping/DQ suggesters, approval-gated (`ai_gateway/local.py`); table/SQL/error-explanation *(pilot)*
+- [x] AI instrumentation: `t_generated_ms` on every suggestion (acceptance/correction rate persists at pilot)
+- [x] Hash-chained audit over the run + chain verification (`security/audit.py`)
+- [x] E2E test: Suppliers extract→…→reconcile, offline (`tests/test_e2e_suppliers.py`); *(pilot: Playwright UI E2E)*
+- [ ] Benchmark: extraction/transform/read-back/concurrency envelope *(pilot, needs real systems)*
 
 ## Gate-mapped exit evidence
 - Gate 1: architecture + benchmark feasibility (extraction, DuckDB, encryption, isolation, read-back)
