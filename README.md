@@ -1,4 +1,4 @@
-# ADTM — Sovereign ERP Migration Accelerator
+# ADTM - Sovereign ERP Migration Accelerator
 
 Client-deployed, source-preserving ERP migration & diagnostics platform.
 Initial wedge: **Oracle EBS → Oracle Fusion**. IP-led delivery accelerator
