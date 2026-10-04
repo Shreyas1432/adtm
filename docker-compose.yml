@@ -1,0 +1,60 @@
+# ADTM appliance skeleton (Phase 0). Docker Compose, not Kubernetes (ADR-0010).
+# `docker compose up` brings up: postgres + api (health) + worker (job poll) + frontend.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+      - pgdata:/var/lib/postgresql/data
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./api
+    env_file: [.env]
+    depends_on:
+      postgres: { condition: service_healthy }
+    volumes:
+      - ./api:/app
+      - ./dataplane:/app/dataplane
+      - ./security:/app/security
+      - ./adapters:/app/adapters
+      - ./ai_gateway:/app/ai_gateway
+      - datavol:/data
+    ports: ["8000:8000"]
+
+  worker:
+    build: ./workers
+    env_file: [.env]
+    depends_on:
+      postgres: { condition: service_healthy }
+    volumes:
+      - ./workers:/app
+      - ./dataplane:/app/dataplane
+      - ./security:/app/security
+      - ./adapters:/app/adapters
+      - ./ai_gateway:/app/ai_gateway
+      - datavol:/data
+
+  frontend:
+    build: ./frontend
+    depends_on: [api]
+    ports: ["5173:5173"]
+
+  # ai-runtime (Ollama placeholder; disabled by default - ADR-0005).
+  # Uncomment and supply an approved local model per client.
+  # ai-runtime:
+  #   image: ollama/ollama:latest
+  #   ports: ["11434:11434"]
+
+volumes:
+  pgdata:
+  datavol:

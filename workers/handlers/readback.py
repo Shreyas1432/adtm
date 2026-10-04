@@ -1,0 +1,4 @@
+"""Target read-back: re-read ACTUAL Fusion state via Read-Back Adapter (ADR-0009).
+STUB - Phase 1. Must be idempotent and checkpoint progress for safe replay."""
+def run(job_id, version_id, payload: dict, checkpoint: dict) -> None:
+    raise NotImplementedError("Phase 1: implement readback handler")
