@@ -29,6 +29,19 @@ class AIGateway:
     def suggest(self, kind: str, context: dict) -> Suggestion:
         if not AI_ENABLED:
             raise RuntimeError("AI disabled (ADTM_AI_ENABLED=false). Enable per client/model review.")
-        # Phase 1: call local model via base_url with metadata/masked-sample context only.
-        t0 = time.monotonic()
-        raise NotImplementedError("Phase 1: implement local model call (metadata-only context)")
+        from . import local
+
+        cols = context.get("columns", [])  # metadata only — never raw PII
+        builders = {"mapping": local.suggest_mappings, "dq_rule": local.suggest_dq_rules}
+        build = builders.get(kind)
+        if build is None:
+            raise NotImplementedError(f"no local suggester for kind={kind!r}")
+        s = build(cols)
+        return Suggestion(
+            kind=kind,
+            suggestion=s["suggestion"],
+            confidence=0.7,
+            model_ref="local-heuristic-v0",
+            t_generated_ms=s["t_generated_ms"],
+            context_fields=s["context_fields"],
+        )
