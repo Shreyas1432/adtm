@@ -11,14 +11,10 @@ production, inject a resolver backed by the client KMS/Vault/secrets manager.
 from __future__ import annotations
 import json
 import os
-from typing import Callable, Protocol
+from typing import Callable
 
 # A resolver maps a secret handle -> a credential dict (e.g. {"user", "password"}).
 SecretResolver = Callable[[str], dict]
-
-
-class SupportsSecretResolve(Protocol):
-    def __call__(self, secret_ref: str) -> dict: ...
 
 
 def dev_env_resolver(secret_ref: str) -> dict:
