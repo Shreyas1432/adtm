@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.auth import AuthError, Principal, authenticate  # noqa: E402
 from app.db import get_session  # noqa: E402
 from app.main import app  # noqa: E402
+from tests.support import FakeSession  # noqa: E402
 
 TOKEN = "s3cr3t-deploy-token"
 WS = "00000000-0000-0000-0000-000000000001"
@@ -54,35 +55,6 @@ def test_authenticate_fails_closed_without_workspace(monkeypatch):
 
 
 # ---- HTTP wiring ----
-
-class _Result:
-    def __init__(self, rows):
-        self._rows = rows
-
-    def mappings(self):
-        return self
-
-    def all(self):
-        return self._rows
-
-    def first(self):
-        return self._rows[0] if self._rows else None
-
-
-class FakeSession:
-    """Records (sql, params) so tests can assert workspace scoping."""
-
-    def __init__(self, rows=None):
-        self.rows = rows or []
-        self.calls = []
-
-    def execute(self, stmt, params=None):
-        self.calls.append((str(stmt), params or {}))
-        return _Result(self.rows)
-
-    def close(self):
-        pass
-
 
 def _client(session):
     app.dependency_overrides[get_session] = lambda: session
@@ -136,7 +108,8 @@ def test_connection_lookup_is_workspace_scoped():
     # No matching connection -> 404, and the lookup is bound to the workspace.
     session = FakeSession([])
     client = _client(session)
-    r = client.get("/connections/abc/tables", headers={"Authorization": f"Bearer {TOKEN}"})
+    cid = "11111111-1111-1111-1111-111111111111"
+    r = client.get(f"/connections/{cid}/tables", headers={"Authorization": f"Bearer {TOKEN}"})
     assert r.status_code == 404
     sql, params = session.calls[-1]
-    assert params["ws"] == WS and "workspace_id=:ws" in sql
+    assert params["ws"] == WS and params["id"] == cid and "workspace_id=:ws" in sql
