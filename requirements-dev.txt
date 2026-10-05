@@ -1,0 +1,7 @@
+# Dev/test dependencies (CI + cloud bootstrap). Runtime pins live in
+# api/requirements.txt and workers/requirements.txt. Tests inject fakes for
+# Oracle/Fusion, so no oracledb/db drivers are needed here.
+pytest
+pyarrow
+duckdb
+cryptography
