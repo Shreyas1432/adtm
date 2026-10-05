@@ -24,15 +24,15 @@ It creates `.venv`, installs [`requirements-dev.txt`](../requirements-dev.txt), 
 2. Use the environment setup command above so the session boots green.
 3. Give it the Phase 2 brief below.
 
-## Phase 2 brief (hardening) — suggested order
+## Phase 2 brief (hardening) — status
 Build order: smallest, highest-leverage safety first. Minimum code, test each slice.
-- [ ] **Thin auth + single-workspace context** on every API request (fixes the Phase-0 gap in the backlog).
-- [ ] **Input validation** on the discovery endpoints (pydantic models; reject unknown/oversized input).
-- [ ] **Worker resilience**: retry/backoff honoring `job.max_attempts`, dead-letter on exhaustion, structured logging (no secrets).
-- [ ] **Key-recovery test** (ADR-0007): prove envelope unwrap after KEK rotation / restore.
-- [ ] **Audit persistence + chain-verification endpoint** over a real run.
-- [ ] **Secret-handling hardening**: confirm no secret/key ever reaches logs, DB, or config.
-- [ ] **Coverage gate** in CI once the suite is broad enough.
+- [x] **Thin auth + single-workspace context** on every API request (ADR-0011).
+- [x] **Input validation** on the discovery endpoints (UUID + bounded Oracle identifier; 422 on bad/oversized input).
+- [x] **Worker resilience**: retry/backoff honoring `job.max_attempts`, dead-letter on exhaustion, redacted structured logging (ADR-0012).
+- [x] **Key-recovery test** (ADR-0007): envelope DEK unwrap proven across KEK rotation/restore.
+- [x] **Audit persistence + chain-verification endpoint** (`GET /audit/verify`) over a real run.
+- [x] **Secret-handling hardening**: no secret/key in errors, logs, process objects, or `/health`.
+- [x] **Coverage gate** in CI (`--cov-fail-under=88`; suite at ~90%).
 
 ## Guardrails for the cloud session (do not violate)
 - All ADTM invariants in [`CLAUDE.md`](../CLAUDE.md) still apply: source read-only,

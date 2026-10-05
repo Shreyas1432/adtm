@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
 jobs:
@@ -15,5 +14,9 @@ jobs:
           python-version: "3.12"
       - name: Install dev dependencies
         run: pip install -r requirements-dev.txt
-      - name: Run tests
-        run: pytest -q
+      - name: Run tests with coverage gate
+        run: >-
+          pytest -q
+          --cov=adapters --cov=ai_gateway --cov=dataplane
+          --cov=security --cov=workers --cov=api/app
+          --cov-report=term-missing --cov-fail-under=88

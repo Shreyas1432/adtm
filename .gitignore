@@ -8,6 +8,9 @@ dist/
 *.parquet
 data/
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
 .DS_Store
 
 # Local Claude Code config & plugins — never pushed to GitHub

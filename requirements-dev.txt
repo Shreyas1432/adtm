@@ -2,6 +2,7 @@
 # api/requirements.txt and workers/requirements.txt. Tests inject fakes for
 # Oracle/Fusion, so no oracledb/db drivers are needed here.
 pytest
+pytest-cov
 pyarrow
 duckdb
 cryptography

@@ -9,7 +9,9 @@ def query_parquet(sql: str, **parquet_paths) -> list[dict]:
     con = duckdb.connect()
     try:
         for name, path in parquet_paths.items():
-            con.execute(f"CREATE VIEW {name} AS SELECT * FROM read_parquet(?)", [path])
+            # A bound parameter is not retained inside a VIEW definition, so the
+            # (internal, control-plane) path is quote-escaped and inlined.
+            con.execute(f"CREATE VIEW {name} AS SELECT * FROM read_parquet('{path.replace(chr(39), chr(39) * 2)}')")
         return [dict(zip([c[0] for c in con.description], row))
                 for row in con.execute(sql).fetchall()]
     finally:
