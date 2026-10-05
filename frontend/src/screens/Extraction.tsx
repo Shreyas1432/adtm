@@ -1,11 +1,13 @@
-import { Box, Paper } from '@mui/material';
+import { Alert, Box, Button, TextField } from '@mui/material';
+import { useState } from 'react';
 import { StatusChip } from '../components/StatusChip';
 import { PreviewNotice } from '../components/StateViews';
 import { PageHeader, Mono, SectionCard } from '../components/ui';
 import { FlowNav } from '../components/FlowNav';
-import { tokens } from '../theme';
+import { isReadonlySelect } from '../lib/sql';
+import { fontMono } from '../theme';
 
-const SQL = `SELECT vendor_id, vendor_name, tax_id, email,
+const DEFAULT_SQL = `SELECT vendor_id, vendor_name, tax_id, email,
        bank_account, address_line1, status,
        country_code, creation_date
 FROM   AP.AP_SUPPLIERS
@@ -23,25 +25,68 @@ const manifest: [string, string][] = [
 ];
 
 export function Extraction() {
+  const [sql, setSql] = useState(DEFAULT_SQL);
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const edited = sql.trim() !== DEFAULT_SQL.trim();
+
+  function run() {
+    if (!isReadonlySelect(sql)) {
+      setResult({
+        ok: false,
+        msg: 'Source is read-only. Only a single SELECT or WITH statement can run against EBS.',
+      });
+      return;
+    }
+    setResult({
+      ok: true,
+      msg: edited
+        ? 'Query is valid and queued as a new draft version. It runs after human approval, writing a new immutable Bronze version (preview, no backend here).'
+        : 'Extraction queued. A new immutable Bronze version would be created from the rows this query returns (preview, no backend here).',
+    });
+  }
+
   return (
     <>
       <PageHeader
         title="Extraction"
         subtitle={<><Mono>AP_SUPPLIERS</Mono> versioned read-only SQL to immutable Bronze</>}
+        actions={
+          <>
+            <Button variant="outlined" disabled={!edited} onClick={() => { setSql(DEFAULT_SQL); setResult(null); }}>
+              Reset
+            </Button>
+            <Button variant="contained" onClick={run}>
+              Run extraction
+            </Button>
+          </>
+        }
       />
       <PreviewNotice />
 
       <SectionCard title="Extraction SQL">
         <Box sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
-            <StatusChip label="v3, approved" kind="success" />
+            {edited ? (
+              <StatusChip label="draft, needs approval" kind="warning" />
+            ) : (
+              <StatusChip label="v3, approved" kind="success" />
+            )}
             <StatusChip label="read-only" kind="info" />
           </Box>
-          <Paper variant="outlined" sx={{ p: 1.5, bgcolor: tokens.bg }}>
-            <Box component="pre" sx={{ m: 0, fontFamily: 'inherit' }}>
-              <Mono>{SQL}</Mono>
-            </Box>
-          </Paper>
+          <TextField
+            multiline
+            fullWidth
+            minRows={7}
+            value={sql}
+            onChange={(e) => { setSql(e.target.value); setResult(null); }}
+            spellCheck={false}
+            inputProps={{ 'aria-label': 'Extraction SQL', style: { fontFamily: fontMono, fontSize: 13 } }}
+          />
+          {result && (
+            <Alert severity={result.ok ? 'success' : 'error'} sx={{ mt: 1.5 }}>
+              {result.msg}
+            </Alert>
+          )}
         </Box>
       </SectionCard>
 
