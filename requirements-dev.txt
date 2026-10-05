@@ -5,3 +5,8 @@ pytest
 pyarrow
 duckdb
 cryptography
+# API-layer tests (auth, input validation) use FastAPI's TestClient. SQLAlchemy
+# is imported by the app; the engine is lazy so no live DB/psycopg is needed.
+fastapi
+httpx
+sqlalchemy
