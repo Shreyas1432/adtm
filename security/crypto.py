@@ -48,6 +48,11 @@ def unwrap_dek(wrapped: str, kek: bytes | None = None) -> bytes:
     blob = _b64d(wrapped); nonce, ct = blob[:12], blob[12:]
     return AESGCM(kek).decrypt(nonce, ct, b"adtm-dek")
 
+def rewrap_dek(wrapped: str, old_kek: bytes, new_kek: bytes) -> str:
+    """KEK rotation/restore (ADR-0007): re-wrap the same DEK under a new KEK.
+    The DEK is unchanged, so immutable Bronze is never re-encrypted."""
+    return wrap_dek(unwrap_dek(wrapped, old_kek), new_kek)
+
 # --- Field encryption with a DEK (randomized AEAD) ---
 def encrypt_field(plaintext: str, dek: bytes, aad: bytes = b"") -> str:
     nonce = os.urandom(12)
