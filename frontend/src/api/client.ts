@@ -1,7 +1,7 @@
 // Thin fetch client for the ADTM control plane. Every request carries the
 // bearer token (ADR-0011); /health is open but sending the header is harmless.
 import { getConfig } from '../config';
-import type { AuditVerify, Column, Health, Job, Project, Workspace } from './types';
+import type { AuditEntry, AuditVerify, Column, Health, Job, Project, Workspace } from './types';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -37,4 +37,5 @@ export const api = {
   testConnection: (connectionId: string) =>
     req<{ ok: boolean }>(`/connections/${connectionId}/test`, { method: 'POST' }),
   verifyAudit: () => req<AuditVerify>('/audit/verify'),
+  auditLog: (limit = 50) => req<AuditEntry[]>(`/audit?limit=${limit}`),
 };

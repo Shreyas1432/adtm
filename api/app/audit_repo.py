@@ -40,3 +40,12 @@ def load_chain(s, workspace_id: str) -> list[dict]:
         "WHERE workspace_id=:ws ORDER BY id"
     ), {"ws": workspace_id}).mappings().all()
     return [dict(r) for r in rows]
+
+
+def list_entries(s, workspace_id: str, limit: int = 50) -> list[dict]:
+    """Most-recent audit entries for the workspace (newest first) for display."""
+    rows = s.execute(text(
+        "SELECT id, action, object_ref, actor, hash, created_at FROM audit_log "
+        "WHERE workspace_id=:ws ORDER BY id DESC LIMIT :lim"
+    ), {"ws": workspace_id, "lim": limit}).mappings().all()
+    return [dict(r) for r in rows]

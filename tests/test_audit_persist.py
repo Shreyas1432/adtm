@@ -60,6 +60,11 @@ class InMemoryAuditSession:
         if sql.startswith("SELECT action"):
             keys = ("action", "object_ref", "details", "prev_hash", "hash")
             return _Res(rows=[{k: r[k] for k in keys} for r in ws])
+        if sql.startswith("SELECT id,"):
+            lim = params.get("lim", 50)
+            recent = sorted(ws, key=lambda r: r["id"], reverse=True)[:lim]
+            keys = ("id", "action", "object_ref", "actor", "hash")
+            return _Res(rows=[{**{k: r[k] for k in keys}, "created_at": f"t{r['id']}"} for r in recent])
         return _Res()
 
     def commit(self):
@@ -107,6 +112,14 @@ def test_workspace_isolation_of_chain():
     assert len(audit_repo.load_chain(s, "ws-b")) == 1
 
 
+def test_list_entries_newest_first_and_limited():
+    s = InMemoryAuditSession()
+    audit_repo.persist(s, WS, "dev", RUN)  # 3 entries
+    entries = audit_repo.list_entries(s, WS, limit=2)
+    assert [e["action"] for e in entries] == ["reconcile", "load"]  # newest first
+    assert all({"id", "action", "object_ref", "actor", "hash", "created_at"} <= e.keys() for e in entries)
+
+
 # ---- endpoint ----
 
 TOKEN = "t"
@@ -142,4 +155,20 @@ def test_verify_endpoint_flags_tamper():
 def test_verify_endpoint_requires_auth():
     app.dependency_overrides[get_session] = lambda: InMemoryAuditSession()
     r = TestClient(app).get("/audit/verify")
+    assert r.status_code == 401
+
+
+def test_list_audit_endpoint_returns_entries():
+    s = InMemoryAuditSession()
+    audit_repo.persist(s, WS, "dev", RUN)
+    app.dependency_overrides[get_session] = lambda: s
+    r = TestClient(app).get("/audit", headers={"Authorization": f"Bearer {TOKEN}"})
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body) == 3 and body[0]["action"] == "reconcile"
+
+
+def test_list_audit_requires_auth():
+    app.dependency_overrides[get_session] = lambda: InMemoryAuditSession()
+    r = TestClient(app).get("/audit")
     assert r.status_code == 401

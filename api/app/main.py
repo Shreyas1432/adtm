@@ -96,6 +96,11 @@ def verify_audit(principal: Principal = CurrentPrincipal, s=Depends(get_session)
     return {"ok": audit.verify(chain), "count": len(chain)}
 
 
+@api.get("/audit")
+def list_audit(limit: int = 50, principal: Principal = CurrentPrincipal, s=Depends(get_session)):
+    return audit_repo.list_entries(s, principal.workspace_id, max(1, min(limit, 200)))
+
+
 app.include_router(api)
 
 # Phase 1 routers still to add: extraction, dq, mapping, simulation, load,

@@ -41,3 +41,12 @@ export interface AuditVerify {
   ok: boolean;
   count: number;
 }
+
+export interface AuditEntry {
+  id: number;
+  action: string;
+  object_ref: string | null;
+  actor: string | null;
+  hash: string;
+  created_at?: string | null;
+}
