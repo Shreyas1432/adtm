@@ -27,8 +27,9 @@ def health():
         with engine().connect() as c:
             c.execute(text("SELECT 1"))
         return {"status": "ok", "db": "up"}
-    except Exception as e:
-        return {"status": "degraded", "db": str(e)}
+    except Exception:
+        # Never echo the raw error: it can carry connection details (invariant #7).
+        return {"status": "degraded", "db": "down"}
 
 
 @api.get("/workspaces")
