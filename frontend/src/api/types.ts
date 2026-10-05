@@ -50,3 +50,14 @@ export interface AuditEntry {
   hash: string;
   created_at?: string | null;
 }
+
+export interface DqResult {
+  id: string;
+  run_id: string;
+  rule_type: string;
+  params: Record<string, unknown>;
+  passed: number;
+  failed: number;
+  sample: unknown;
+  created_at?: string | null;
+}

@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from security import audit
 
-from . import audit_repo
+from . import audit_repo, reads
 from .auth import CurrentPrincipal, Principal, require_principal
 from .db import engine, get_session
 from .discovery import IDENTIFIER_RE, MAX_IDENTIFIER_LEN, build_ebs_adapter, discover_columns
@@ -99,6 +99,13 @@ def verify_audit(principal: Principal = CurrentPrincipal, s=Depends(get_session)
 @api.get("/audit")
 def list_audit(limit: int = 50, principal: Principal = CurrentPrincipal, s=Depends(get_session)):
     return audit_repo.list_entries(s, principal.workspace_id, max(1, min(limit, 200)))
+
+
+# ---- Read-side: data-quality results (raw rows; the UI maps them) ----
+@api.get("/dq/results")
+def list_dq_results(run_id: str | None = None, limit: int = 200,
+                    principal: Principal = CurrentPrincipal, s=Depends(get_session)):
+    return reads.dq_results(s, principal.workspace_id, run_id, max(1, min(limit, 500)))
 
 
 app.include_router(api)
