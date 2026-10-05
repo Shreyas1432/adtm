@@ -41,3 +41,23 @@ export interface AuditVerify {
   ok: boolean;
   count: number;
 }
+
+export interface AuditEntry {
+  id: number;
+  action: string;
+  object_ref: string | null;
+  actor: string | null;
+  hash: string;
+  created_at?: string | null;
+}
+
+export interface DqResult {
+  id: string;
+  run_id: string;
+  rule_type: string;
+  params: Record<string, unknown>;
+  passed: number;
+  failed: number;
+  sample: unknown;
+  created_at?: string | null;
+}
