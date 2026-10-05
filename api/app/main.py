@@ -8,6 +8,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Path
 from sqlalchemy import text
 
+from security import audit
+
+from . import audit_repo
 from .auth import CurrentPrincipal, Principal, require_principal
 from .db import engine, get_session
 from .discovery import IDENTIFIER_RE, MAX_IDENTIFIER_LEN, build_ebs_adapter, discover_columns
@@ -83,6 +86,13 @@ def list_source_tables(connection_id: UUID, principal: Principal = CurrentPrinci
 @api.get("/connections/{connection_id}/tables/{table}/columns")
 def list_source_columns(connection_id: UUID, table: str = _TABLE, principal: Principal = CurrentPrincipal, s=Depends(get_session)):
     return discover_columns(build_ebs_adapter(_ebs_connection(s, connection_id, principal.workspace_id)), table)
+
+
+# ---- Audit: verify the workspace's hash chain over its persisted run (ADR-0008) ----
+@api.get("/audit/verify")
+def verify_audit(principal: Principal = CurrentPrincipal, s=Depends(get_session)):
+    chain = audit_repo.load_chain(s, principal.workspace_id)
+    return {"ok": audit.verify(chain), "count": len(chain)}
 
 
 app.include_router(api)
