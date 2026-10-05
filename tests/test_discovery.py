@@ -2,7 +2,21 @@
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "api"))
 
-from app.discovery import suggest_encryption, discover_columns, AEAD_BLIND, AEAD, NONE
+from app.discovery import (
+    suggest_encryption, discover_columns, is_valid_identifier,
+    MAX_IDENTIFIER_LEN, AEAD_BLIND, AEAD, NONE,
+)
+
+
+def test_is_valid_identifier_accepts_oracle_names():
+    for name in ["AP_SUPPLIERS", "x", "V$SESSION", "col_1", "a" * MAX_IDENTIFIER_LEN]:
+        assert is_valid_identifier(name)
+
+
+def test_is_valid_identifier_rejects_bad_names():
+    for name in ["", "1abc", "ap suppliers", "drop;table", "a" * (MAX_IDENTIFIER_LEN + 1),
+                 "tbl-name", "tbl'); --", "tbl\n"]:
+        assert not is_valid_identifier(name)
 
 
 def test_suggest_high_cardinality_match_keys_get_blind_index():

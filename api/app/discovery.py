@@ -11,6 +11,22 @@ them into the versioned config (ADR-0005).
 """
 from __future__ import annotations
 
+import re
+
+# Input validation (ADR-0011 hardening). An Oracle identifier starts with a
+# letter and is at most 128 chars of letters/digits/_/$/#. Rejecting anything
+# else at the API boundary turns malformed/oversized input into a clean 422
+# instead of a downstream DB error (defence-in-depth; table is already bound as
+# a query parameter, never interpolated).
+MAX_IDENTIFIER_LEN = 128
+IDENTIFIER_RE = r"^[A-Za-z][A-Za-z0-9_$#]{0,127}$"
+_IDENTIFIER = re.compile(IDENTIFIER_RE)
+
+
+def is_valid_identifier(name: str) -> bool:
+    return bool(name) and _IDENTIFIER.fullmatch(name) is not None
+
+
 AEAD_BLIND = "aead_blind_index"  # AES-256-GCM + HMAC blind index (equality/dedupe)
 AEAD = "aead"                    # AES-256-GCM only
 NONE = "none"
