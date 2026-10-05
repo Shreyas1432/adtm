@@ -15,7 +15,7 @@ import type { Column } from '../api/types';
 import { useAsync } from '../hooks/useAsync';
 import { SAMPLE_CONNECTION_ID, SAMPLE_TABLE, sampleColumns } from '../data/sample';
 import { EncryptionChip, StatusChip, encryptionRationale } from '../components/StatusChip';
-import { Loading, ErrorView } from '../components/StateViews';
+import { Loading } from '../components/StateViews';
 import { PageHeader, Mono, SectionCard } from '../components/ui';
 import { FlowNav } from '../components/FlowNav';
 
@@ -58,8 +58,16 @@ export function SchemaDiscovery() {
 
       {loading && <Loading label="Reading source metadata" />}
       {!loading && error && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Control plane not reachable, showing sample metadata. ({error.message})
+        <Alert
+          severity="warning"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={reload}>
+              Retry
+            </Button>
+          }
+        >
+          Control plane not reachable. Showing sample metadata.
         </Alert>
       )}
 
@@ -102,8 +110,6 @@ export function SchemaDiscovery() {
           </Table>
         </SectionCard>
       )}
-
-      {!loading && error && <ErrorView error={error} onRetry={reload} />}
 
       <FlowNav />
       <Snackbar
